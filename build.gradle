@@ -1,0 +1,75 @@
+plugins {
+    id "com.jfrog.bintray" version "0.5"
+}
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven-publish'
+
+
+sourceCompatibility = '1.6'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// custom tasks for creating source/javadoc jars
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+// add javadoc/source jar tasks as artifacts
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      groupId 'cz.kubacki.gradle'
+      artifactId 'integ-test-helpers'
+      version = '0.1'
+      if (!project.hasProperty('release')) {
+        version = "${version}-dev"
+      }
+
+      from components.java
+
+      artifact sourcesJar {
+        classifier "sources"
+      }
+      
+      artifact javadocJar {
+        classifier "javadoc"
+      }
+    }
+  }
+}
+
+dependencies {
+  compile 'com.google.guava:guava:17.0'
+  compile 'com.google.code.findbugs:jsr305:2.0.3'
+  compile 'junit:junit:4.11'
+}
+
+
+bintray {
+  user = bintrayUser //this usually comes form gradle.properties file in ~/.gradle
+  key = bintrayKey //this usually comes form gradle.properties file in ~/.gradle
+  publications = ['maven'] // see publications closure
+  pkg {
+      repo = 'maven'
+//            userOrg = 'gradle'
+      name = 'integ-test-helpers'
+      desc = 'JUnit test runner to run a test multiple times using different parameters.'
+      licenses = ['Apache-2.0']
+      labels = ['junit', 'gradle']
+  }
+}
