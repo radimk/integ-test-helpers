@@ -1,10 +1,17 @@
 plugins {
     id "com.jfrog.bintray" version "0.5"
+    id "org.ajoberstar.release-opinion" version "0.11.0"
 }
+
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
+import org.ajoberstar.grgit.Grgit
+release {
+  grgit = Grgit.open(project.file('.'))
+}
+tasks.release.dependsOn 'build'// , 'publish'
 
 sourceCompatibility = '1.6'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -35,10 +42,6 @@ publishing {
     maven(MavenPublication) {
       groupId 'cz.kubacki.gradle'
       artifactId 'integ-test-helpers'
-      version = '0.1'
-      if (!project.hasProperty('release')) {
-        version = "${version}-dev"
-      }
 
       from components.java
 
@@ -66,7 +69,6 @@ bintray {
   publications = ['maven'] // see publications closure
   pkg {
       repo = 'maven'
-//            userOrg = 'gradle'
       name = 'integ-test-helpers'
       desc = 'JUnit test runner to run a test multiple times using different parameters.'
       licenses = ['Apache-2.0']
